@@ -1,21 +1,46 @@
-// Create a web server 
-// Create a web server that's going to send a response of "Hello World" for every request it receives
-// The server should listen on port 8080
-// Use the createServer method from the http module
+//Create web server
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const url = require('url');
+const comments = require('./comments.js');
 
-var http = require('http');
-
-var server = http.createServer(function (req, res) {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('Hello World\n');
+const server = http.createServer((req, res) => {
+  let urlObj = url.parse(req.url, true);
+  let pathname = urlObj.pathname;
+  if (pathname === '/') {
+    //get file path
+    let filePath = path.join(__dirname, 'index.html');
+    //read file
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.statusCode = 500;
+        res.end('Server Internal Error.');
+      }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.end(data);
+    });
+  } else if (pathname === '/add') {
+    let comment = urlObj.query;
+    comments.add(comment);
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.end(JSON.stringify(comment));
+  } else if (pathname === '/list') {
+    let data = comments.list();
+    res.end(JSON.stringify(data));
+  } else {
+    let filePath = path.join(__dirname, pathname);
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.statusCode = 404;
+        res.end('Not Found.');
+      }
+      res.end(data);
+    });
+  }
 });
 
-
-server.listen(8080, () => {
-  console.log('Server is listening on port 8080');
-});
-
-
-
+server.listen(3000, '
 
 
